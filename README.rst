@@ -17,6 +17,9 @@ Tools included:
 #. Simplified state machines:
 
    #. A bare timer, including ``interval_func(duration, |_| { do_something() })``
+#. Loop setup helpers
+
+   #. ``LoopExt::add_and_fetch`` -- easier setup of client protocols
 
 
 .. _rotor: http://github.com/tailhook/rotor
