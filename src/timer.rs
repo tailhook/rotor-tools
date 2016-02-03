@@ -23,7 +23,7 @@ pub struct Ticker<M: Timer> {
 pub struct Interval<M: SimpleTimer>(Duration, M);
 
 /// A convenience type for declaring state machines
-pub type IntervalFunc<C> = Ticker<Interval<Box<FnMut(&mut Scope<C>)>>>;
+pub type IntervalFunc<C> = Ticker<Interval<Box<FnMut(&mut Scope<C>) + Send>>>;
 
 /// A protocol for the state machine that put into the `Ticker`
 pub trait Timer {
@@ -142,7 +142,7 @@ impl<T: SimpleTimer> Timer for Interval<T> {
     }
 }
 
-impl<C> SimpleTimer for Box<FnMut(&mut Scope<C>)> {
+impl<C> SimpleTimer for Box<FnMut(&mut Scope<C>) + Send> {
     type Context = C;
     fn timeout(mut self, scope: &mut Scope<Self::Context>) -> Self {
         self(scope);
@@ -153,7 +153,7 @@ impl<C> SimpleTimer for Box<FnMut(&mut Scope<C>)> {
 /// A helper function to create intervals from closures
 pub fn interval_func<C, F>(scope: &mut Scope<C>, interval: Duration, fun: F)
     -> IntervalFunc<C>
-    where F: FnMut(&mut Scope<C>) + 'static
+    where F: FnMut(&mut Scope<C>) + 'static + Send
 {
     Ticker::new(scope, Interval(interval, Box::new(fun)))
 }
