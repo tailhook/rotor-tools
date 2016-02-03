@@ -14,9 +14,9 @@ But different versions of other libraries are possible, including rotor-tools.
 
 Tools included:
 
-    * Simplified state machines:
+* Simplified state machines:
 
-        * A bare timer
+    * A bare timer
 
 
 .. _rotor: http://github.com/tailhook/rotor
