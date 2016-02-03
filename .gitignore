@@ -1,3 +1,4 @@
 /vagga.yaml
 /.vagga
 /target
+/Cargo.lock
