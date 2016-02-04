@@ -1,3 +1,4 @@
+//! The traits which make main loop construction nicer
 use std::error::Error;
 
 use rotor::{Machine, Scope, EarlyScope, Loop, LoopInstance, SpawnError};
@@ -17,12 +18,15 @@ pub trait LoopExt<M> {
     /// * `rotor_carbon::connect_ip()`
     ///
     /// Usage is simple (carbon example):
+    ///
     /// ```ignore
     /// let sink = loop_inst.add_and_fetch(Fsm::Carbon, |scope| {
     ///     connect_ip(addr, scope)
     /// });
     /// ```
+    ///
     /// Compare it to *traditional* way:
+    ///
     /// ```ignore
     /// let mut sink_opt = None;
     /// loop_creator.add_machine_with(|scope| {
@@ -54,12 +58,15 @@ pub trait LoopInstanceExt<M: Machine> {
     /// * `rotor_carbon::connect_ip()`
     ///
     /// Usage is simple (carbon example):
+    ///
     /// ```ignore
     /// let sink = loop_inst.add_and_fetch(Fsm::Carbon, |scope| {
     ///     connect_ip(addr, scope)
     /// });
     /// ```
+    ///
     /// Compare it to *traditional* way:
+    ///
     /// ```ignore
     /// let mut sink_opt = None;
     /// loop_creator.add_machine_with(|scope| {
