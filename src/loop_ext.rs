@@ -2,6 +2,7 @@
 use std::error::Error;
 
 use rotor::{Machine, Scope, EarlyScope, Loop, LoopInstance, SpawnError};
+use rotor::{Response, Void};
 
 
 /// Convenience enhancements to the main loop creator
@@ -41,7 +42,7 @@ pub trait LoopExt<M> {
         -> Result<T, SpawnError<()>>
         where E: Error + 'static,
               W: FnOnce(N) -> M,
-              F: FnOnce(&mut EarlyScope) -> Result<(N, T), E>;
+              F: FnOnce(&mut EarlyScope) -> Response<(N, T), Void>;
 }
 
 /// Convenience enhancements to the main loop creator instance
@@ -81,39 +82,41 @@ pub trait LoopInstanceExt<M: Machine> {
         -> Result<T, SpawnError<()>>
         where E: Error + 'static,
               W: FnOnce(N) -> M,
-              F: FnOnce(&mut Scope<M::Context>) -> Result<(N, T), E>;
+              F: FnOnce(&mut Scope<M::Context>) -> Response<(N, T), Void>;
 }
 
-impl<C, M: Machine<Context=C>> LoopExt<M> for Loop<C, M> {
+impl<M: Machine> LoopExt<M> for Loop<M> {
     fn add_and_fetch<F, W, T, E, N>(&mut self, fsm_wrapper: W, fun: F)
         -> Result<T, SpawnError<()>>
         where E: Error + 'static,
               W: FnOnce(N) -> M,
-              F: FnOnce(&mut EarlyScope) -> Result<(N, T), E>
+              F: FnOnce(&mut EarlyScope) -> Response<(N, T), Void>
     {
         let mut result_opt = None;
         try!(self.add_machine_with(|scope| {
-            let (fsm, value) = try!(fun(scope));
-            result_opt = Some(value);
-            Ok(fsm_wrapper(fsm))
+            fun(scope).wrap(|(fsm, value)| {
+                result_opt = Some(value);
+                fsm_wrapper(fsm)
+            })
         }));
         Ok(result_opt.unwrap())
     }
 }
 
 
-impl<C, M: Machine<Context=C>> LoopInstanceExt<M> for LoopInstance<C, M> {
+impl<M: Machine> LoopInstanceExt<M> for LoopInstance<M> {
     fn add_and_fetch<F, W, T, E, N>(&mut self, fsm_wrapper: W, fun: F)
         -> Result<T, SpawnError<()>>
         where E: Error + 'static,
               W: FnOnce(N) -> M,
-              F: FnOnce(&mut Scope<M::Context>) -> Result<(N, T), E>
+              F: FnOnce(&mut Scope<M::Context>) -> Response<(N, T), Void>
     {
         let mut result_opt = None;
         try!(self.add_machine_with(|scope| {
-            let (fsm, value) = try!(fun(scope));
-            result_opt = Some(value);
-            Ok(fsm_wrapper(fsm))
+            fun(scope).wrap(|(fsm, value)| {
+                result_opt = Some(value);
+                fsm_wrapper(fsm)
+            })
         }));
         Ok(result_opt.unwrap())
     }

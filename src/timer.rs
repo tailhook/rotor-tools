@@ -1,10 +1,7 @@
 //! Time utitities
-use std::error::Error;
-use std::cmp::max;
-use rotor::{Machine, Scope, Response, EventSet, GenericScope};
-use void::{Void, unreachable};
-
-use {Duration, Deadline};
+use std::time::Duration;
+use rotor::{Machine, Scope, Response, EventSet, GenericScope, Time};
+use rotor::void::{Void, unreachable};
 
 /// Ticker state machine
 ///
@@ -13,7 +10,7 @@ use {Duration, Deadline};
 ///
 /// The `Ticker` machine also ensures that there are no spurious events.
 pub struct Ticker<M: Timer> {
-    deadline: Deadline,
+    deadline: Time,
     machine: M,
 }
 
@@ -34,27 +31,25 @@ pub trait Timer {
 
     /// Calculates the next wakeup time
     ///
-    /// `now` -- is time when event processing was started, this is provided
-    ///          for performance reasons
     /// `scheduled` -- time when event had to occur
     ///
     /// There are two options to calculate the time. If you just need to
     /// run something on occasion use simply:
     /// ```ignore
-    /// now + Duration::seconds(interval)
+    /// scope.now() + Duration::new(interval, )
     /// ```
     ///
     /// Or if you need to run strict number of times and as close as possible
     /// to the multiple of the interval time. You may want:
     /// ```ignore
-    /// scheduled + Duration::seconds(interval)
+    /// scheduled + Duration::new(interval, 0)
     /// ```
     ///
     /// Note, in both cases mio will run timeout handler on the next tick
     /// of the timer, which means +200 ms by default.
-    fn next_wakeup_time(&self, now: Deadline, scheduled: Deadline,
+    fn next_wakeup_time(&self, scheduled: Time,
         scope: &mut Scope<Self::Context>)
-        -> Deadline;
+        -> Time;
 }
 
 /// The timer trait used in the `Ticker<Interval<T>>`
@@ -66,15 +61,14 @@ pub trait SimpleTimer {
 }
 
 impl<T: Timer> Ticker<T> {
-    pub fn new(scope: &mut Scope<T::Context>, machine: T) -> Ticker<T> {
-        let now = Deadline::now();
-        let next = machine.next_wakeup_time(now, now, scope);
-        scope.timeout_ms(
-            max(0, (next - now).num_milliseconds()) as u64).unwrap();
-        Ticker {
+    pub fn new(scope: &mut Scope<T::Context>, machine: T)
+        -> Response<Ticker<T>, Void>
+    {
+        let next = machine.next_wakeup_time(scope.now(), scope);
+        Response::ok(Ticker {
             deadline: next,
             machine: machine,
-        }
+        }).deadline(next)
     }
 }
 
@@ -82,7 +76,7 @@ impl<M: Timer> Machine for Ticker<M> {
     type Context = M::Context;
     type Seed = Void;
     fn create(seed: Self::Seed, _scope: &mut Scope<Self::Context>)
-        -> Result<Self, Box<Error>>
+        -> Response<Self, Void>
     {
         unreachable(seed);
     }
@@ -90,7 +84,8 @@ impl<M: Timer> Machine for Ticker<M> {
         -> Response<Self, Self::Seed>
     {
         // Spurious event
-        Response::ok(self)
+        let deadline = self.deadline;
+        Response::ok(self).deadline(deadline)
     }
     fn spawned(self, _scope: &mut Scope<Self::Context>)
         -> Response<Self, Self::Seed>
@@ -100,25 +95,28 @@ impl<M: Timer> Machine for Ticker<M> {
     fn timeout(self, scope: &mut Scope<Self::Context>)
         -> Response<Self, Self::Seed>
     {
-        let now = Deadline::now();
+        let now = scope.now();
         if now > self.deadline {
             let newm = self.machine.timeout(scope);
-            let next = newm.next_wakeup_time(now, self.deadline, scope);
-            scope.timeout_ms(
-                max(0, (next - now).num_milliseconds()) as u64).unwrap();
+            let next = newm.next_wakeup_time(self.deadline, scope);
             Response::ok(Ticker {
                 deadline: next,
                 machine: newm,
-            })
+            }).deadline(next)
         } else {
-            Response::ok(self)
+            // Spurious timeout
+            // TODO(tailhook) should not happen when we get rid of
+            // scope.timeout_ms()
+            let deadline = self.deadline;
+            Response::ok(self).deadline(deadline)
         }
     }
     fn wakeup(self, _scope: &mut Scope<Self::Context>)
         -> Response<Self, Self::Seed>
     {
         // Spurious wakeup
-        Response::ok(self)
+        let deadline = self.deadline;
+        Response::ok(self).deadline(deadline)
     }
 }
 
@@ -127,15 +125,15 @@ impl<T: SimpleTimer> Timer for Interval<T> {
     fn timeout(self, scope: &mut Scope<Self::Context>) -> Self {
         Interval(self.0, self.1.timeout(scope))
     }
-    fn next_wakeup_time(&self, now: Deadline, scheduled: Deadline,
-        _scope: &mut Scope<Self::Context>)
-        -> Deadline
+    fn next_wakeup_time(&self, scheduled: Time,
+        scope: &mut Scope<Self::Context>)
+        -> Time
     {
         // Try to minimize the drift
         let goal = scheduled + self.0;
-        if now > goal {
+        if scope.now() > goal {
             // But if we are a way too late, just use current time
-            return now + self.0;
+            return scope.now() + self.0;
         } else {
             return goal;
         }
@@ -152,7 +150,7 @@ impl<C> SimpleTimer for Box<FnMut(&mut Scope<C>) + Send> {
 
 /// A helper function to create intervals from closures
 pub fn interval_func<C, F>(scope: &mut Scope<C>, interval: Duration, fun: F)
-    -> IntervalFunc<C>
+    -> Response<IntervalFunc<C>, Void>
     where F: FnMut(&mut Scope<C>) + 'static + Send
 {
     Ticker::new(scope, Interval(interval, Box::new(fun)))
