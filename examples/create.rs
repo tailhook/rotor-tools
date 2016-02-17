@@ -4,7 +4,6 @@ extern crate rotor_tools;
 use std::time::{Duration};
 
 use rotor::{Loop, Config, Scope, Response, Void};
-use rotor::void::unreachable;
 use rotor_tools::timer::{IntervalFunc, interval_func};
 use rotor_tools::loop_ext::LoopInstanceExt;
 

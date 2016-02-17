@@ -13,7 +13,7 @@ version = "0.2.0"
 authors = ["paul@colomiets.name"]
 
 [dependencies]
-rotor = {git="git://github.com/tailhook/rotor", rev="71a9f78"}
+rotor = {git="git://github.com/tailhook/rotor", rev="08946ce"}
 
 [lib]
 name = "rotor_tools"
