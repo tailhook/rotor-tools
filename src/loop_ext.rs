@@ -1,6 +1,4 @@
 //! The traits which make main loop construction nicer
-use std::error::Error;
-
 use rotor::{Machine, Scope, EarlyScope, Loop, LoopInstance, SpawnError};
 use rotor::{Response, Void};
 
@@ -38,10 +36,9 @@ pub trait LoopExt<M> {
     /// let sink = sink_opt.unwrap();
     /// ```
     ///
-    fn add_and_fetch<F, W, T, E, N>(&mut self, fsm_wrapper: W, fun: F)
+    fn add_and_fetch<F, W, T, N>(&mut self, fsm_wrapper: W, fun: F)
         -> Result<T, SpawnError<()>>
-        where E: Error + 'static,
-              W: FnOnce(N) -> M,
+        where W: FnOnce(N) -> M,
               F: FnOnce(&mut EarlyScope) -> Response<(N, T), Void>;
 }
 
@@ -78,18 +75,16 @@ pub trait LoopInstanceExt<M: Machine> {
     /// let sink = sink_opt.unwrap();
     /// ```
     ///
-    fn add_and_fetch<F, W, T, E, N>(&mut self, fsm_wrapper: W, fun: F)
+    fn add_and_fetch<F, W, T, N>(&mut self, fsm_wrapper: W, fun: F)
         -> Result<T, SpawnError<()>>
-        where E: Error + 'static,
-              W: FnOnce(N) -> M,
+        where W: FnOnce(N) -> M,
               F: FnOnce(&mut Scope<M::Context>) -> Response<(N, T), Void>;
 }
 
 impl<M: Machine> LoopExt<M> for Loop<M> {
-    fn add_and_fetch<F, W, T, E, N>(&mut self, fsm_wrapper: W, fun: F)
+    fn add_and_fetch<F, W, T, N>(&mut self, fsm_wrapper: W, fun: F)
         -> Result<T, SpawnError<()>>
-        where E: Error + 'static,
-              W: FnOnce(N) -> M,
+        where W: FnOnce(N) -> M,
               F: FnOnce(&mut EarlyScope) -> Response<(N, T), Void>
     {
         let mut result_opt = None;
@@ -105,10 +100,9 @@ impl<M: Machine> LoopExt<M> for Loop<M> {
 
 
 impl<M: Machine> LoopInstanceExt<M> for LoopInstance<M> {
-    fn add_and_fetch<F, W, T, E, N>(&mut self, fsm_wrapper: W, fun: F)
+    fn add_and_fetch<F, W, T, N>(&mut self, fsm_wrapper: W, fun: F)
         -> Result<T, SpawnError<()>>
-        where E: Error + 'static,
-              W: FnOnce(N) -> M,
+        where W: FnOnce(N) -> M,
               F: FnOnce(&mut Scope<M::Context>) -> Response<(N, T), Void>
     {
         let mut result_opt = None;
