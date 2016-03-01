@@ -28,8 +28,14 @@ pub trait Replaceable: Machine {
     /// Return the empty value that may be used as replacement
     ///
     /// **The method must be cheap to compute**. Because it's executed on
-    /// every action of a state machine.
-    fn empty() -> Self;
+    /// every action of a state machine (for `mem::replace`)
+    ///
+    /// Note in case the lock is poisoned (panic was received while keeping
+    /// state machine locked, perhaps in another thread), the `empty` value
+    /// is used on the poisoned value, before `restart()` is called. This
+    /// means you only want to use read-only parts of `self` here (better
+    /// none at all, but that's not always possible).
+    fn empty(&self) -> Self;
     /// Restart a state machine from `empty()` state
     ///
     /// This method is called before calling any other action methods when
@@ -64,7 +70,8 @@ fn locked_call<M, F>(scope: &mut Scope<M::Context>, me: Mutexed<M>,
 {
     let fake_result = match me.0.lock() {
         Ok(mut guard) => {
-            let fsm = mem::replace(&mut *guard, Replaceable::empty());
+            let empty = guard.empty();
+            let fsm = mem::replace(&mut *guard, empty);
             let res = fun(fsm, scope);
             res.wrap(|new_machine| {
                 // thows off an `empty()` instance
@@ -74,7 +81,8 @@ fn locked_call<M, F>(scope: &mut Scope<M::Context>, me: Mutexed<M>,
         }
         Err(poisoned) => {
             let mut guard = poisoned.into_inner();
-            let fsm = mem::replace(&mut *guard, Replaceable::empty());
+            let empty = guard.empty();
+            let fsm = mem::replace(&mut *guard, empty);
             let res = fsm.restart(scope);
             res.wrap(|new_machine| {
                 // thows off an `empty()` instance
