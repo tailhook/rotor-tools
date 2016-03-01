@@ -9,11 +9,11 @@ readme = "README.rst"
 keywords = ["mio", "rotor", "async"]
 homepage = "http://github.com/tailhook/rotor-tools"
 documentation = "http://tailhook.github.io/rotor-tools"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["paul@colomiets.name"]
 
 [dependencies]
-rotor = {git="git://github.com/tailhook/rotor", rev="d001aa3"}
+rotor = "0.6.0"
 
 [lib]
 name = "rotor_tools"
