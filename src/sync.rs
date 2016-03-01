@@ -8,7 +8,7 @@ use std::sync::{Arc, Mutex};
 use rotor::{Machine, EventSet, Scope, Response};
 use rotor::{Void};
 
-pub struct Mutexed<M>(Arc<Mutex<M>>);
+pub struct Mutexed<M>(pub Arc<Mutex<M>>);
 
 /// A trait which allows to replace the state machine with dummy/null/None
 ///
