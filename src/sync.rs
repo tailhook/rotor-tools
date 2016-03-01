@@ -24,7 +24,7 @@ pub struct Mutexed<M>(Arc<Mutex<M>>);
 ///
 /// The text above means you should be able to "restart" the state machine
 /// from the `empty()` state.
-trait Replaceable: Machine {
+pub trait Replaceable: Machine {
     /// Return the empty value that may be used as replacement
     ///
     /// **The method must be cheap to compute**. Because it's executed on
