@@ -96,7 +96,7 @@ impl<M: Timer> Machine for Ticker<M> {
         -> Response<Self, Self::Seed>
     {
         let now = scope.now();
-        if now > self.deadline {
+        if now >= self.deadline {
             let newm = self.machine.timeout(scope);
             let next = newm.next_wakeup_time(self.deadline, scope);
             Response::ok(Ticker {
