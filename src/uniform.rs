@@ -6,7 +6,7 @@
 
 use rotor::{Scope, Machine, Response, EventSet, Void};
 
-struct Uniform<T: Action>(T);
+struct Uniform<T: Action>(pub T);
 
 trait Action: Sized {
     type Context;
