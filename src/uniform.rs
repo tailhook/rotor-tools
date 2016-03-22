@@ -6,9 +6,9 @@
 
 use rotor::{Scope, Machine, Response, EventSet, Void};
 
-struct Uniform<T: Action>(pub T);
+pub struct Uniform<T: Action>(pub T);
 
-trait Action: Sized {
+pub trait Action: Sized {
     type Context;
     type Seed;
     fn create(seed: Self::Seed, scope: &mut Scope<Self::Context>)
