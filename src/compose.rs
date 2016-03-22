@@ -7,51 +7,67 @@ use rotor::{Machine, Scope, Response};
 
 /// Composes two state machines where of the state machines spawns
 /// multiple instances of another one
-pub enum Spawn<S:Sized, C:Sized> {
+pub enum Spawn<S: Spawner> {
     Spawner(S),
-    Child(C),
+    Child(S::Child),
 }
 
-impl<X, D, S, C> Machine for Spawn<S, C>
-    where S: Machine<Context=X, Seed=D>, C: Machine<Context=X, Seed=D>
-{
-    type Context = X;
-    type Seed = D;
+pub trait Spawner: Machine<Seed=Void> {
+    type Child: Machine<Context=Self::Context, Seed=Void>;
+    type Seed;
 
-    fn create(seed: D, scope: &mut Scope<X>)
+    fn spawn(seed: <Self as Spawner>::Seed,
+        scope: &mut Scope<<<Self as Spawner>::Child as Machine>::Context>)
+        -> Response<Self::Child, Void>;
+}
+
+impl<S> Machine for Spawn<S>
+    where S: Spawner,
+{
+    type Context = <S::Child as Machine>::Context;
+    type Seed = <S as Spawner>::Seed;
+
+    fn create(seed: <S as Spawner>::Seed, scope: &mut Scope<Self::Context>)
         -> Response<Self, Void>
     {
-        C::create(seed, scope).map(Spawn::Child, |x| unreachable(x))
+        S::spawn(seed, scope).wrap(Spawn::Child)
     }
-    fn ready(self, events: EventSet, scope: &mut Scope<X>)
+    fn ready(self, events: EventSet, scope: &mut Scope<Self::Context>)
         -> Response<Self, Self::Seed>
     {
         use self::Spawn::*;
         match self {
-            Spawner(m) => { m.ready(events, scope).wrap(Spawner) }
-            Child(m) => { m.ready(events, scope).wrap(Child) }
+            Spawner(m) => { m.ready(events, scope)
+                             .map(Spawner, |x| unreachable(x)) }
+            Child(m) => { m.ready(events, scope)
+                           .map(Child, |x| unreachable(x)) }
         }
     }
-    fn spawned(self, scope: &mut Scope<X>) -> Response<Self, Self::Seed>
+    fn spawned(self, scope: &mut Scope<Self::Context>)
+        -> Response<Self, Self::Seed>
     {
         use self::Spawn::*;
         match self {
-            Spawner(m) => { m.spawned(scope).wrap(Spawner) }
-            Child(m) => { m.spawned(scope).wrap(Child) }
+            Spawner(m) => { m.spawned(scope).map(Spawner, |x| unreachable(x)) }
+            Child(m) => { m.spawned(scope).map(Child, |x| unreachable(x)) }
         }
     }
-    fn timeout(self, scope: &mut Scope<X>) -> Response<Self, Self::Seed> {
+    fn timeout(self, scope: &mut Scope<Self::Context>)
+        -> Response<Self, Self::Seed>
+    {
         use self::Spawn::*;
         match self {
-            Spawner(m) => { m.timeout(scope).wrap(Spawner) }
-            Child(m) => { m.timeout(scope).wrap(Child) }
+            Spawner(m) => { m.timeout(scope).map(Spawner, |x| unreachable(x)) }
+            Child(m) => { m.timeout(scope).map(Child, |x| unreachable(x)) }
         }
     }
-    fn wakeup(self, scope: &mut Scope<X>) -> Response<Self, Self::Seed> {
+    fn wakeup(self, scope: &mut Scope<Self::Context>)
+        -> Response<Self, Self::Seed>
+    {
         use self::Spawn::*;
         match self {
-            Spawner(m) => { m.wakeup(scope).wrap(Spawner) }
-            Child(m) => { m.wakeup(scope).wrap(Child) }
+            Spawner(m) => { m.wakeup(scope).map(Spawner, |x| unreachable(x)) }
+            Child(m) => { m.wakeup(scope).map(Child, |x| unreachable(x)) }
         }
     }
 }
