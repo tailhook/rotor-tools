@@ -1,3 +1,5 @@
+//! Composition tools
+
 use rotor::mio::EventSet;
 use rotor::void::{Void, unreachable};
 use rotor::{Machine, Scope, Response};
