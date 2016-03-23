@@ -21,8 +21,8 @@ pub trait Spawner {
         -> Response<Self::Child, Void>;
 }
 
-impl<T, C> Spawner for ::uniform::Uniform<T>
-    where T: Spawner + ::uniform::Action<Seed=Void, Context=C>
+impl<T, C, S> Spawner for ::uniform::Uniform<T>
+    where T: Spawner<Seed=S> + ::uniform::Action<Seed=S, Context=C>
 {
     type Child = T::Child;
     type Seed = <T as Spawner>::Seed;
