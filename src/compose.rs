@@ -35,8 +35,8 @@ impl<T, C> Spawner for ::uniform::Uniform<T>
     }
 }
 
-impl<S, C> Machine for Spawn<S>
-    where S: Spawner<Child=C> + Machine<Context=C::Context, Seed=Void>,
+impl<S, C, D> Machine for Spawn<S>
+    where S: Spawner<Child=C, Seed=D> + Machine<Context=C::Context, Seed=D>,
           C: Machine<Seed=Void>,
 {
     type Context = <S::Child as Machine>::Context;
@@ -52,8 +52,7 @@ impl<S, C> Machine for Spawn<S>
     {
         use self::Spawn::*;
         match self {
-            Spawner(m) => { m.ready(events, scope)
-                             .map(Spawner, |x| unreachable(x)) }
+            Spawner(m) => { m.ready(events, scope).wrap(Spawner) }
             Child(m) => { m.ready(events, scope)
                            .map(Child, |x| unreachable(x)) }
         }
@@ -63,7 +62,7 @@ impl<S, C> Machine for Spawn<S>
     {
         use self::Spawn::*;
         match self {
-            Spawner(m) => { m.spawned(scope).map(Spawner, |x| unreachable(x)) }
+            Spawner(m) => { m.spawned(scope).wrap(Spawner) }
             Child(m) => { m.spawned(scope).map(Child, |x| unreachable(x)) }
         }
     }
@@ -72,7 +71,7 @@ impl<S, C> Machine for Spawn<S>
     {
         use self::Spawn::*;
         match self {
-            Spawner(m) => { m.timeout(scope).map(Spawner, |x| unreachable(x)) }
+            Spawner(m) => { m.timeout(scope).wrap(Spawner) }
             Child(m) => { m.timeout(scope).map(Child, |x| unreachable(x)) }
         }
     }
@@ -81,7 +80,7 @@ impl<S, C> Machine for Spawn<S>
     {
         use self::Spawn::*;
         match self {
-            Spawner(m) => { m.wakeup(scope).map(Spawner, |x| unreachable(x)) }
+            Spawner(m) => { m.wakeup(scope).wrap(Spawner) }
             Child(m) => { m.wakeup(scope).map(Child, |x| unreachable(x)) }
         }
     }
