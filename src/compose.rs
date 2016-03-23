@@ -12,17 +12,17 @@ pub enum Spawn<S: Spawner> {
     Child(S::Child),
 }
 
-pub trait Spawner: Machine<Seed=Void> {
-    type Child: Machine<Context=Self::Context, Seed=Void>;
+pub trait Spawner {
+    type Child: Machine<Seed=Void>;
     type Seed;
 
-    fn spawn(seed: <Self as Spawner>::Seed,
-        scope: &mut Scope<<<Self as Spawner>::Child as Machine>::Context>)
+    fn spawn(seed: Self::Seed,
+        scope: &mut Scope<<Self::Child as Machine>::Context>)
         -> Response<Self::Child, Void>;
 }
 
 impl<T, C> Spawner for ::uniform::Uniform<T>
-    where T: Spawner<Context=C> + ::uniform::Action<Seed=Void, Context=C>
+    where T: Spawner + ::uniform::Action<Seed=Void, Context=C>
 {
     type Child = T::Child;
     type Seed = <T as Spawner>::Seed;
@@ -35,8 +35,9 @@ impl<T, C> Spawner for ::uniform::Uniform<T>
     }
 }
 
-impl<S> Machine for Spawn<S>
-    where S: Spawner,
+impl<S, C> Machine for Spawn<S>
+    where S: Spawner<Child=C> + Machine<Context=C::Context, Seed=Void>,
+          C: Machine<Seed=Void>,
 {
     type Context = <S::Child as Machine>::Context;
     type Seed = <S as Spawner>::Seed;
