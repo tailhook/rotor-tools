@@ -15,5 +15,8 @@ authors = ["paul@colomiets.name"]
 [dependencies]
 rotor = "0.6.1"
 
+[dev-dependencies]
+rotor-test = "0.2.0"
+
 [lib]
 name = "rotor_tools"
