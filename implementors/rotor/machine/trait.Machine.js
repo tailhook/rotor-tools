@@ -1,0 +1,10 @@
+(function() {var implementors = {};
+implementors['rotor_tools'] = ["impl&lt;M: <a class='trait' href='rotor_tools/timer/trait.Timer.html' title='rotor_tools::timer::Timer'>Timer</a>&gt; <a class='trait' href='rotor/machine/trait.Machine.html' title='rotor::machine::Machine'>Machine</a> for <a class='struct' href='rotor_tools/timer/struct.Ticker.html' title='rotor_tools::timer::Ticker'>Ticker</a>&lt;M&gt;","impl&lt;M: <a class='trait' href='rotor_tools/sync/trait.Replaceable.html' title='rotor_tools::sync::Replaceable'>Replaceable</a>&gt; <a class='trait' href='rotor/machine/trait.Machine.html' title='rotor::machine::Machine'>Machine</a> for <a class='struct' href='rotor_tools/sync/struct.Mutexed.html' title='rotor_tools::sync::Mutexed'>Mutexed</a>&lt;M&gt;","impl&lt;S, C, D&gt; <a class='trait' href='rotor/machine/trait.Machine.html' title='rotor::machine::Machine'>Machine</a> for <a class='enum' href='rotor_tools/compose/enum.Spawn.html' title='rotor_tools::compose::Spawn'>Spawn</a>&lt;S&gt; <span class='where'>where S: <a class='trait' href='rotor_tools/compose/trait.Spawner.html' title='rotor_tools::compose::Spawner'>Spawner</a>&lt;Child=C, Seed=D&gt; + <a class='trait' href='rotor/machine/trait.Machine.html' title='rotor::machine::Machine'>Machine</a>&lt;Context=C::Context, Seed=D&gt;, C: <a class='trait' href='rotor/machine/trait.Machine.html' title='rotor::machine::Machine'>Machine</a>&lt;Seed=<a class='enum' href='void/enum.Void.html' title='void::Void'>Void</a>&gt;</span>","impl&lt;T: <a class='trait' href='rotor_tools/uniform/trait.Action.html' title='rotor_tools::uniform::Action'>Action</a>&gt; <a class='trait' href='rotor/machine/trait.Machine.html' title='rotor::machine::Machine'>Machine</a> for <a class='struct' href='rotor_tools/uniform/struct.Uniform.html' title='rotor_tools::uniform::Uniform'>Uniform</a>&lt;T&gt;",];
+
+            if (window.register_implementors) {
+                window.register_implementors(implementors);
+            } else {
+                window.pending_implementors = implementors;
+            }
+        
+})()
